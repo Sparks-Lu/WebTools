@@ -1,6 +1,5 @@
 import os
 import sys
-import collections
 
 
 class CSV2JSON(object):
@@ -21,17 +20,21 @@ class CSV2JSON(object):
             return
 
         # parse csv
-        contents = collections.OrderedDict()
+        contents = []
         key = None
         for line in lines:
             # keep ending \t
             line = line.strip(' \n').replace('"', '\\"')
             if line.find('\t') >= 0:
-                key, value = line.split('\t')
-                contents[key] = value
-            elif key is not None:
-                # append to last key
-                contents[key] = contents[key] + '\t' + line
+                # new row
+                values = line.split('\t')
+                contents.append(values)
+            else:
+                # append to last row
+                if len(contents) > 0:
+                    contents[-1].append(line)
+                else:
+                    contents.append(line)
 
         # write json
         if fn_json is None:
@@ -40,15 +43,22 @@ class CSV2JSON(object):
                 dn = '.'
             fn_json = '{}/{}.json'.format(dn, os.path.basename(fn_csv))
         with open(fn_json, 'w', encoding='UTF-8') as f:
-            for k in contents.keys():
-                line = '["'
-                line += k
-                line += '"'
-                values = contents[k].split('\t')
-                for v in values:
-                    if len(v) > 0:
-                        line += ',"{}"'.format(v)
-                line += '],\n'
+            for idx_row, r in enumerate(contents):
+                line = '['
+                if type(r) is str:
+                    line = '["{}"'.format(r)
+                else:
+                    for idx_span, span in enumerate(r):
+                        if idx_span == 0:
+                            line += '"{}"'.format(span)
+                        elif len(span) > 0:
+                            line += ',"{}"'.format(span)
+                if idx_row == len(contents) - 1:
+                    # No comma and newline for last row in table
+                    print('Will not output comma in last row.')
+                    line += ']'
+                else:
+                    line += '],\n'
                 f.write(line)
             f.close()
             print('JSON was written as {} successfully.'.format(fn_json))
