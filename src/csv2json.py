@@ -14,7 +14,7 @@ class CSV2JSON(object):
 
     def convert(self, fn_csv, fn_json=None):
         lines = []
-        with open(fn_csv, 'r') as f:
+        with open(fn_csv, 'r', encoding='UTF-8') as f:
             lines = f.readlines()
             f.close()
         if len(lines) == 0:
@@ -24,7 +24,7 @@ class CSV2JSON(object):
         contents = collections.OrderedDict()
         key = None
         for line in lines:
-            line = line.strip()
+            line = line.strip().replace('"', '\\"')
             if line.find('\t') >= 0:
                 key, value = line.split('\t')
                 contents[key] = value
@@ -38,7 +38,7 @@ class CSV2JSON(object):
             if dn == '':
                 dn = '.'
             fn_json = '{}/{}.json'.format(dn, os.path.basename(fn_csv))
-        with open(fn_json, 'w') as f:
+        with open(fn_json, 'w', encoding='UTF-8') as f:
             for k in contents.keys():
                 line = '["'
                 line += k
