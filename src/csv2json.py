@@ -24,7 +24,8 @@ class CSV2JSON(object):
         contents = collections.OrderedDict()
         key = None
         for line in lines:
-            line = line.strip().replace('"', '\\"')
+            # keep ending \t
+            line = line.strip(' \n').replace('"', '\\"')
             if line.find('\t') >= 0:
                 key, value = line.split('\t')
                 contents[key] = value
@@ -45,7 +46,8 @@ class CSV2JSON(object):
                 line += '"'
                 values = contents[k].split('\t')
                 for v in values:
-                    line += ',"{}"'.format(v)
+                    if len(v) > 0:
+                        line += ',"{}"'.format(v)
                 line += '],\n'
                 f.write(line)
             f.close()
